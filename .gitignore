@@ -1,0 +1,23 @@
+__pycache__/
+.idea/
+*.pyc
+*.pckl
+*.png
+*.mp4
+*.zip
+.DS_Store
+tmp/
+*.npy
+*.h5
+
+# Documentation build artifacts
+documentation/api_docs/_build/
+documentation/docs/_build/
+
+# Measurement data (private experiments)
+measurements/
+
+# Virtual environment
+venv/
+.venv/
+env/

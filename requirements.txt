@@ -1,0 +1,12 @@
+# Open-XYZ Requirements (Host Computer)
+# Install with: pip install -r requirements.txt
+
+# Core dependencies for stage control
+requests>=2.31.0       # HTTP communication with Marlin controller
+pyserial>=3.5.0        # Serial communication with Marlin controller
+
+# Path generation and scanning
+coordinate-paths>=1.0.0  # Coordinate path generation (rectangular, circular, polygon)
+
+# Optional dependencies
+tqdm>=4.65.0           # Progress bars during scans (optional)

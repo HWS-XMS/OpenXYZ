@@ -1,0 +1,3 @@
+[submodule "CoordinatePaths"]
+	path = CoordinatePaths
+	url = git@github.com:HWS-XMS/CoordinatePaths.git

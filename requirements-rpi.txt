@@ -1,0 +1,13 @@
+# Open-XYZ Requirements (Raspberry Pi)
+# Install with: pip install -r requirements-rpi.txt
+#
+# The Raspberry Pi runs the Flask server (rpi.py) that bridges HTTP to serial/encoder.
+# Path generation and visualization happen on the host computer, not on the Pi.
+
+# Core dependencies
+pyserial>=3.5.0        # Serial communication with Marlin controller
+
+# Raspberry Pi specific dependencies
+RPi.GPIO>=0.7.1        # GPIO control for encoder chip select pins
+spidev>=3.6.0          # SPI communication with LS7366R encoder chips
+flask>=2.3.0           # HTTP server for Marlin/encoder API endpoints

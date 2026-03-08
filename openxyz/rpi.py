@@ -32,6 +32,9 @@ enc = LS7366R(bus=0, cs_pins={
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Persistent serial connection
+marlin_serial = MarlinSerial('/dev/ttyACM0')
+
 
 @app.route('/send_gcode', methods=['POST'])
 def send_gcode() -> jsonify:
@@ -44,18 +47,15 @@ def send_gcode() -> jsonify:
 	:raises serial.SerialException: If a serial communication error occurs
 	:raises Exception: If an unexpected error occurs
 	"""
-	gcode = request.json.get('gcode').strip()
-	if not gcode:
+	gcode = request.json.get('gcode')
+	if not gcode or not gcode.strip():
 		logger.error("No G-code received in request.")
 		return jsonify({"error": "No G-code received"}), 400
+	gcode = gcode.strip()
 
 	try:
-		marlin_serial = MarlinSerial('/dev/ttyACM0')
-
 		response = marlin_serial.send_gcode(gcode)
 		response = response.decode('utf-8').replace('ok\n', '').strip()
-
-		marlin_serial.close()
 
 		logger.info(f"G-code '{gcode}' executed successfully.")
 		return jsonify({"response": response}), 200

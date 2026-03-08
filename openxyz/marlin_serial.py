@@ -110,37 +110,36 @@ class MarlinSerial:
 		self.log.critical('Emergency stop initiated.')
 		self.__wait_cmd_completed()
 
-	def __wait_cmd_completed(self, max_tries: int = 100) -> bytes:
+	def __wait_cmd_completed(self, timeout: float = 120.0) -> bytes:
 		"""
 		Waits for a command to be completed.
 		HOST_KEEPALIVE_FEATURE has to be enabled in Marlin configuration.
 		Marlin is expected to send a 'busy' message once a second (DEFAULT_KEEPALIVE_INTERVAL 1).
 
-		:param max_tries: Maximum number of tries to receive 'ok' message.
-		:type max_tries: int
+		:param timeout: Maximum time in seconds to wait for completion.
+		:type timeout: float
 		:return: All received messages
 		:rtype: bytes
 		"""
 		msg = b''
+		deadline = time.time() + timeout
 		try:
-			counter = 0
 			while True:
-				res = self.ser.read()
-				if res:
-					msg += res
-				if BUSY_MSG in msg:
-					counter = 0
-					msg = b''
-				if OK_MSG in msg:
-					break
-				counter += 1
-				if counter > max_tries:
+				line = self.ser.readline()
+				if line:
+					if BUSY_MSG in line:
+						deadline = time.time() + timeout
+						continue
+					msg += line
+					if OK_MSG in line:
+						break
+				if time.time() > deadline:
 					raise IOError('Timeout while waiting for a command to be completed: {:s}'.format(str(msg)))
 		except KeyboardInterrupt:
 			self.emergency()
 			raise
 
-		return msg + self.ser.read()
+		return msg
 
 	def __wait_move_completed(self) -> None:
 		"""

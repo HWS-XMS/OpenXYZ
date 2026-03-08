@@ -40,10 +40,12 @@ class PositioningMode(enum.Enum):
 	POSITIONING_MODE_RELATIVE 	= 0x01
 
 class Stage(object):
-	def __init__(self, marlin: Marlin):
+	def __init__(self, marlin: Marlin, feedrate: int = 100,
+				 limits: tuple[tuple[float, float], tuple[float, float], tuple[float, float]] = None):
 		self.__marlin 			= marlin
-		self.__context 			= decimal.getcontext()
-		self.__context.prec 	= 4
+		self.__context 			= decimal.Context(prec=10)
+		self.__feedrate			= feedrate
+		self.__limits			= limits  # ((x_min, x_max), (y_min, y_max), (z_min, z_max))
 		self.__initialize_stage()
 
 	def __send_gcode(self, gcode: GCode, *args) -> str or None:
@@ -55,10 +57,17 @@ class Stage(object):
 	def __initialize_stage(self):
 		self.set_positioning_unit(mode=PositioningUnit.POSITIONING_UNIT_MILLIMETER)
 		self.set_positioning_mode(mode=PositioningMode.POSITIONING_MODE_ABSOLUTE)
-		self.auto_home(only_untrusted=True)
 		self.set_max_feedrates(max_feedrates=(300, 300, 300))
 		self.feedrate_percent = 100
-		self.set_lcd_message(message='Open-FML')
+		self.set_lcd_message(message='OpenXYZ')
+
+	def __check_bounds(self, axis: int, value: float):
+		if self.__limits is None:
+			return
+		lo, hi = self.__limits[axis]
+		if not (lo <= float(value) <= hi):
+			axis_name = ['X', 'Y', 'Z'][axis]
+			raise ValueError(f"{axis_name}={value} out of bounds [{lo}, {hi}]")
 
 	def set_positioning_unit(self, mode: PositioningUnit):
 		self.__send_gcode(GCode.G20 if mode == PositioningUnit.POSITIONING_UNIT_INCH else GCode.G21)
@@ -76,7 +85,7 @@ class Stage(object):
 			self.__send_gcode(GCode.G28, 'X', 'Y', 'Z')
 
 	def set_max_feedrates(self, max_feedrates: tuple[int, int, int]):
-		self.__send_gcode(GCode.M203, "X{}", "Y{}", "Z{}".format(max_feedrates[0], max_feedrates[1], max_feedrates[2]))
+		self.__send_gcode(GCode.M203, "X{}".format(max_feedrates[0]), "Y{}".format(max_feedrates[1]), "Z{}".format(max_feedrates[2]))
 
 	@property
 	def feedrate_percent(self) -> int:
@@ -115,7 +124,8 @@ class Stage(object):
 
 	@x.setter
 	def x(self, value: decimal.Decimal):
-		self.__send_gcode(GCode.G0, "X{} F100".format(value))
+		self.__check_bounds(0, value)
+		self.__send_gcode(GCode.G0, "X{} F{}".format(value, self.__feedrate))
 
 	@property
 	def y(self) -> decimal.Decimal:
@@ -123,7 +133,8 @@ class Stage(object):
 
 	@y.setter
 	def y(self, value: decimal.Decimal):
-		self.__send_gcode(GCode.G0, "Y{} F100".format(value))
+		self.__check_bounds(1, value)
+		self.__send_gcode(GCode.G0, "Y{} F{}".format(value, self.__feedrate))
 
 	@property
 	def z(self) -> decimal.Decimal:
@@ -131,7 +142,8 @@ class Stage(object):
 
 	@z.setter
 	def z(self, value: decimal.Decimal):
-		self.__send_gcode(GCode.G0, "Z{} F100".format(value))
+		self.__check_bounds(2, value)
+		self.__send_gcode(GCode.G0, "Z{} F{}".format(value, self.__feedrate))
 
 	@property
 	def xy(self) -> tuple[decimal.Decimal, decimal.Decimal]:
@@ -140,8 +152,9 @@ class Stage(object):
 
 	@xy.setter
 	def xy(self, xy: tuple[decimal.Decimal, decimal.Decimal]):
-		self.x = xy[0]
-		self.y = xy[1]
+		self.__check_bounds(0, xy[0])
+		self.__check_bounds(1, xy[1])
+		self.__send_gcode(GCode.G0, "X{} Y{} F{}".format(xy[0], xy[1], self.__feedrate))
 
 	def apply_delta(self, delta: tuple[decimal.Decimal, decimal.Decimal, decimal.Decimal]):
 		self.x = self.x + delta[0]

@@ -36,12 +36,14 @@ class Marlin:
 		else:
 			raise Exception(f"Could not connect to Marlin: {response.text}")
 
-	def send_gcode(self, gcode: str) -> str or None:
+	def send_gcode(self, gcode: str, max_retries: int = 10) -> str or None:
 		"""
 		Sends a G-code command to Marlin.
 
 		:param gcode: The G-code command to send
 		:type gcode: str
+		:param max_retries: Maximum number of retries on failure
+		:type max_retries: int
 		:return: The response from Marlin
 		:rtype: str or None
 		:raises Exception: If unable to send G-code
@@ -52,20 +54,16 @@ class Marlin:
 
 		payload = {'gcode': gcode}
 
-		retry_count = 0
-		while True:
+		for retry_count in range(max_retries):
 			try:
-				response = requests.post(f'{self.url}/send_gcode', json=payload)
-				while response.status_code != 200:
-					response = requests.post(f'{self.url}/send_gcode', json=payload)
-					if response.status_code == 200:
-						break
+				response = requests.post(f'{self.url}/send_gcode', json=payload, timeout=180)
 				if response.status_code == 200:
 					break
-			except:
+			except requests.exceptions.RequestException:
 				self._log.warning(f"({retry_count})\tCould not send G-code, retrying...")
-				time.sleep(5)
-				retry_count += 1
+				time.sleep(min(5 * (2 ** retry_count), 60))
+		else:
+			raise Exception(f"Failed to send G-code '{gcode}' after {max_retries} retries")
 
 		response = response.text
 		response = json.loads(response)["response"]

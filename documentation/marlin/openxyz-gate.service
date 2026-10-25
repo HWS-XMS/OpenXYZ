@@ -1,0 +1,24 @@
+# OpenXYZ gate (openxyz/gate.py): PC /dev/ttyUSBx (115200) <-> CM4 /dev/serial0 <-> Marlin USB 0483:5740.
+#
+# Prerequisites on the CM4:
+#   sudo apt install python3-serial
+#   sudo raspi-config  -> Interface Options -> Serial Port: login shell "No", hardware "Yes"; reboot
+#   Do not run openxyz/rpi.py at the same time (both would talk to Marlin).
+#
+# Install:
+#   sudo install -m 755 gate.py /usr/local/bin/openxyz-gate
+#   sudo install -m 644 openxyz-gate.service /etc/systemd/system/
+#   sudo systemctl enable --now openxyz-gate
+#   journalctl -u openxyz-gate -f
+
+[Unit]
+Description=OpenXYZ gate (serial0 <-> Marlin)
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart=/usr/local/bin/openxyz-gate
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -3194,7 +3194,7 @@
 
   // --- OUR CURRENT ---
   #if AXIS_IS_TMC_CONFIG(X)
-    #define X_CURRENT       800        // (mA) RMS current. Multiply by 1.414 for peak current.
+    #define X_CURRENT       800        // (mA) RMS current. Multiply by 1.414 for peak current. Standa 4247 motor: 1.2 A/phase
     #define X_CURRENT_HOME  X_CURRENT  // (mA) RMS current for homing. (Typically lower than *_CURRENT.)
     #define X_MICROSTEPS     16        // 0..256
     #define X_RSENSE          0.075 // https://www.youtube.com/watch?v=dOJbSrWVu_Q 0.075

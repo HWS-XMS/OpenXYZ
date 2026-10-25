@@ -1383,12 +1383,13 @@
  */
 // --- OUR STAGE HAS NO EXTRUDER ---
 // remove 4th entry
-#define DEFAULT_MAX_FEEDRATE          { 5, 5, 5 }
+// --- 2 MM/S (= HOMING_FEEDRATE): FASTER, THE STANDA 4247 MOTORS RUN ROUGH IN STEALTHCHOP ---
+#define DEFAULT_MAX_FEEDRATE          { 2, 2, 2 }
 
 // --- M203 MUST NEVER RAISE THE MAX FEEDRATE ABOVE DEFAULT_MAX_FEEDRATE ---
 #define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
 #if ENABLED(LIMITED_MAX_FR_EDITING)
-  #define MAX_FEEDRATE_EDIT_VALUES    { 5, 5, 5 } // ...or, set your own edit limits
+  #define MAX_FEEDRATE_EDIT_VALUES    { 2, 2, 2 } // ...or, set your own edit limits
 #endif
 
 /**
@@ -1976,9 +1977,10 @@
  * If an axis has endstops on both ends the one specified above is used for
  * homing, while the other can be used for things like SD_ABORT_ON_ENDSTOP_HIT.
  */
-#define X_SAFETY_STOP
-#define Y_SAFETY_STOP
-#define Z_SAFETY_STOP
+// --- ONE LIMIT SWITCH PER AXIS (HIT OR NOT), ONLY ON THE HOMING SIDE: NO SECOND STOP INPUT ---
+//#define X_SAFETY_STOP
+//#define Y_SAFETY_STOP
+//#define Z_SAFETY_STOP
 //#define I_SAFETY_STOP
 //#define J_SAFETY_STOP
 //#define K_SAFETY_STOP
